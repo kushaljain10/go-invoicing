@@ -10,9 +10,7 @@ func NewTaxes() Taxes {
 	}
 }
 
-func getSGSTList() Taxes, error {
-	
-	taxes := NewTaxes()
+func (taxes *Taxes) getSGSTList() error {
 
 	r, err := getCSVReaderWithoutHeader("sgst.csv")
 	if isError(err) {
