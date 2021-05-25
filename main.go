@@ -20,7 +20,10 @@ func main() {
 	}
 
 	for _, customer := range customers {
-		invoice := generateInvoice(customer, inventory, taxes)
+		invoice, err := generateInvoice(customer, inventory, taxes)
+		if isError(err) {
+			log.Fatalln(err)
+		}
 		err = invoice.Print()
 		if isError(err) {
 			log.Fatalln(err)

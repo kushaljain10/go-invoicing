@@ -1,5 +1,11 @@
 package main
 
+import (
+	"encoding/csv"
+	"os"
+	"strconv"
+)
+
 type Customer struct {
 	name  string
 	state string
@@ -15,8 +21,8 @@ type cartItem struct {
 	quantity int
 }
 
-func FetchCustomers() []Customer, error {
-	
+func fetchCustomers() ([]Customer, error) {
+
 	var customers []Customer
 
 	r, err := getCSVReaderWithoutHeader("customers.csv")
@@ -41,17 +47,17 @@ func FetchCustomers() []Customer, error {
 		}
 
 		customers = append(customers, Customer{
-			name: c[0],
+			name:  c[0],
 			state: c[1],
-			cart: cart,
+			cart:  *cart,
 		})
 	}
 	return customers, nil
 }
 
-func fetchCart(customerName string) Cart, error {
-	var cart Cart
-	
+func fetchCart(customerName string) (*Cart, error) {
+	var cart *Cart
+
 	file, err := os.Open("cart/" + customerName + ".csv")
 	if isError(err) {
 		return nil, err
@@ -73,9 +79,14 @@ func fetchCart(customerName string) Cart, error {
 			return nil, err
 		}
 
-		cart = append(cart, cartItem{
-			name: c[0],
-			quantity: c[1],
+		quantity, err := strconv.Atoi(c[1])
+		if isError(err) {
+			return nil, err
+		}
+
+		cart.items = append(cart.items, cartItem{
+			name:     c[0],
+			quantity: quantity,
 		})
 	}
 	return cart, nil

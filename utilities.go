@@ -7,17 +7,11 @@ import (
 )
 
 func isError(err error) bool {
-	if err != nil {
-		return true
-	}
-	return false
+	return err != nil
 }
 
 func isEOF(err error) bool {
-	if err == io.EOF {
-		return true
-	}
-	return false
+	return err == io.EOF
 }
 
 func getCSVReaderWithoutHeader(filename string) (*csv.Reader, error) {

@@ -1,10 +1,13 @@
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 type Invoice struct {
-	customerName  string
-	customerState string
-	customerSGST  int
-	items         []invoiceItem
+	customerName string
+	items        []invoiceItem
 }
 
 type invoiceItem struct {
@@ -19,35 +22,32 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(customer Customer, inventory Inventory, taxes Taxes) Invoice, error {
+func generateInvoice(customer Customer, inventory *Inventory, taxes *Taxes) (Invoice, error) {
 	var err error
 	var invoice Invoice
 	cart := customer.cart
 	sgst := taxes.SGSTList[customer.state]
-	
-	for _, product := range cart {
-		item := & invoiceItem{
-			productName: product.name
+
+	for _, product := range cart.items {
+		item := invoiceItem{
+			productName: product.name,
 		}
 
-		item.quantity, err = strconv.Atoi(product.quantity)
-		if isError(err) {
-			return nil, err
-		}
-
+		item.quantity = product.quantity
 		item.price = inventory.products[item.productName].price
-		item.totalBeforeTax = float(item.quantity) * item.price
+		item.totalBeforeTax = float64(item.quantity) * item.price
 		item.cgst = inventory.products[item.productName].cgst
-		item.cgstValue = item.totalBeforeTax * (float(item.cgst) / 100)
+		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
 		item.sgst = sgst
-		item.sgstValue = item.totalBeforeTax * (float(item.sgst) / 100)
+		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
 		item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
-		
+
 		invoice.items = append(invoice.items, item)
 	}
+	return invoice, err
 }
 
-func (inv Invoice) Print() err {
+func (inv Invoice) Print() error {
 	var totalCartValue float64
 
 	file, err := os.Create("invoices/" + inv.customerName + "_invoice.txt")
@@ -59,12 +59,12 @@ func (inv Invoice) Print() err {
 	invoiceContent := "Customer Name: " + inv.customerName + "\n\n"
 	for i, item := range inv.items {
 		invoiceContent +=
-			fmt.Sprintf("%d. %s | ", i+1, item,productName) +
-			fmt.Sprintf("Quantity: %d | ", item.quantity) +
-			fmt.Sprintf("Price: %.2f | ", item.price) +
-			fmt.Sprintf("SGST: %.2f | ", item.sgstValue) +
-			fmt.Sprintf("CGST: %.2f | ", item.cgstValue) +
-			fmt.Sprintf("Total: %.2f\n", item.totalAfterTax)
+			fmt.Sprintf("%d. %s | ", i+1, item.productName) +
+				fmt.Sprintf("Quantity: %d | ", item.quantity) +
+				fmt.Sprintf("Price: %.2f | ", item.price) +
+				fmt.Sprintf("SGST: %.2f | ", item.sgstValue) +
+				fmt.Sprintf("CGST: %.2f | ", item.cgstValue) +
+				fmt.Sprintf("Total: %.2f\n", item.totalAfterTax)
 		totalCartValue += item.totalAfterTax
 	}
 	invoiceContent += fmt.Sprintf("\nTotal: %.2f", totalCartValue)
@@ -72,5 +72,5 @@ func (inv Invoice) Print() err {
 	if isError(err) {
 		return err
 	}
-
+	return nil
 }

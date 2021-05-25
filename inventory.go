@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 type Inventory struct {
 	products map[string]ProductValues
 }
@@ -9,9 +11,9 @@ type ProductValues struct {
 	cgst  int
 }
 
-func getInventory() Inventory, error {
-	var inventory Inventory
-	
+func getInventory() (*Inventory, error) {
+	var inventory *Inventory
+
 	r, err := getCSVReaderWithoutHeader("products.csv")
 	if isError(err) {
 		return nil, err
@@ -38,7 +40,8 @@ func getInventory() Inventory, error {
 
 		inventory.products[p[0]] = ProductValues{
 			price: price,
-			cgst: cgst,
+			cgst:  cgst,
 		}
 	}
+	return inventory, nil
 }

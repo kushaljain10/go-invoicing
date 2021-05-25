@@ -1,12 +1,14 @@
 package main
 
-Taxes {
+import "strconv"
+
+type Taxes struct {
 	SGSTList map[string]int
 }
 
-func NewTaxes() Taxes {
+func NewTaxes() *Taxes {
 	return &Taxes{
-		SGSTList: make(map[string]int, 0)
+		SGSTList: make(map[string]int),
 	}
 }
 
@@ -14,7 +16,7 @@ func (taxes *Taxes) getSGSTList() error {
 
 	r, err := getCSVReaderWithoutHeader("sgst.csv")
 	if isError(err) {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -23,13 +25,13 @@ func (taxes *Taxes) getSGSTList() error {
 			break
 		}
 		if isError(err) {
-			return nil, err
+			return err
 		}
 
 		taxes.SGSTList[s[0]], err = strconv.Atoi(s[1])
 		if isError(err) {
-			return nil, err
+			return err
 		}
 	}
-	return taxes, err
+	return err
 }
