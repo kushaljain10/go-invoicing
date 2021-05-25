@@ -12,7 +12,9 @@ type ProductValues struct {
 }
 
 func getInventory() (*Inventory, error) {
-	var inventory *Inventory
+	inventory := &Inventory{
+		products: make(map[string]ProductValues),
+	}
 
 	r, err := getCSVReaderWithoutHeader("products.csv")
 	if isError(err) {

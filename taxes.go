@@ -14,7 +14,7 @@ func NewTaxes() *Taxes {
 
 func (taxes *Taxes) getSGSTList() error {
 
-	r, err := getCSVReaderWithoutHeader("sgst.csv")
+	r, err := getCSVReaderWithoutHeader("SGST.csv")
 	if isError(err) {
 		return err
 	}
