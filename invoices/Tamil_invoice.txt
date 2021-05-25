@@ -1,0 +1,8 @@
+Customer Name: Tamil
+
+1. Apple | Quantity: 2 | Price: 50.00 | SGST: 3.00 | CGST: 5.00 | Total: 108.00
+2. Banana | Quantity: 2 | Price: 10.00 | SGST: 0.60 | CGST: 1.00 | Total: 21.60
+3. Shampoo | Quantity: 1 | Price: 100.00 | SGST: 3.00 | CGST: 10.00 | Total: 113.00
+4. HairDryer | Quantity: 1 | Price: 0.00 | SGST: 0.00 | CGST: 0.00 | Total: 0.00
+
+Total: 242.60

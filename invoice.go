@@ -24,7 +24,9 @@ type invoiceItem struct {
 
 func generateInvoice(customer Customer, inventory *Inventory, taxes *Taxes) (Invoice, error) {
 	var err error
-	var invoice Invoice
+	invoice := Invoice{
+		customerName: customer.name,
+	}
 	cart := customer.cart
 	sgst := taxes.SGSTList[customer.state]
 

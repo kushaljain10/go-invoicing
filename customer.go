@@ -56,7 +56,9 @@ func fetchCustomers() ([]Customer, error) {
 }
 
 func fetchCart(customerName string) (*Cart, error) {
-	var cart *Cart
+	cart := &Cart{
+		items: make([]cartItem, 0),
+	}
 
 	file, err := os.Open("cart/" + customerName + ".csv")
 	if isError(err) {
