@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -41,7 +40,6 @@ func main() {
 		if isError(err) {
 			log.Fatalln(err)
 		}
-		fmt.Println(invoice.customerName)
 	}
 
 	// for _, customer := range customers {
