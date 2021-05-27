@@ -22,31 +22,59 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(customer Customer, inventory *Inventory, taxes *Taxes) (Invoice, error) {
-	var err error
-	invoice := Invoice{
-		customerName: customer.name,
-	}
-	cart := customer.cart
-	sgst := taxes.SGSTList[customer.state]
+// func generateInvoice(customer Customer, inventory *Inventory, taxes *Taxes) (Invoice, error) {
+// 	var err error
+// 	invoice := Invoice{
+// 		customerName: customer.name,
+// 	}
+// 	cart := customer.cart
+// 	sgst := taxes.SGSTList[customer.state]
 
-	for _, product := range cart.items {
-		item := invoiceItem{
-			productName: product.name,
+// 	for _, product := range cart.items {
+// 		item := invoiceItem{
+// 			productName: product.name,
+// 		}
+
+// 		item.quantity = product.quantity
+// 		item.price = inventory.products[item.productName].price
+// 		item.totalBeforeTax = float64(item.quantity) * item.price
+// 		item.cgst = inventory.products[item.productName].cgst
+// 		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
+// 		item.sgst = sgst
+// 		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
+// 		item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
+
+// 		invoice.items = append(invoice.items, item)
+// 	}
+// 	return invoice, err
+// }
+
+func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan Customer, invoicesChannel chan<- Invoice) {
+	for customer := range customersChannel {
+		invoice := Invoice{
+			customerName: customer.name,
 		}
+		cart := customer.cart
+		sgst := taxes.SGSTList[customer.state]
 
-		item.quantity = product.quantity
-		item.price = inventory.products[item.productName].price
-		item.totalBeforeTax = float64(item.quantity) * item.price
-		item.cgst = inventory.products[item.productName].cgst
-		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
-		item.sgst = sgst
-		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
-		item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
+		for _, product := range cart.items {
+			item := invoiceItem{
+				productName: product.name,
+			}
 
-		invoice.items = append(invoice.items, item)
+			item.quantity = product.quantity
+			item.price = inventory.products[item.productName].price
+			item.totalBeforeTax = float64(item.quantity) * item.price
+			item.cgst = inventory.products[item.productName].cgst
+			item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
+			item.sgst = sgst
+			item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
+			item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
+
+			invoice.items = append(invoice.items, item)
+		}
+		invoicesChannel <- invoice
 	}
-	return invoice, err
 }
 
 func (inv Invoice) Print() error {

@@ -1,6 +1,9 @@
 package main
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 func main() {
 	inventory, err := getInventory()
@@ -19,15 +22,34 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	for _, customer := range customers {
-		invoice, err := generateInvoice(customer, inventory, taxes)
-		if isError(err) {
-			log.Fatalln(err)
-		}
+	numOfCustomers := len(customers)
+	customersChannel := make(chan Customer, numOfCustomers)
+	invoicesChannel := make(chan Invoice, numOfCustomers)
+
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+
+	for _, c := range customers {
+		customersChannel <- c
+	}
+	close(customersChannel)
+
+	for i := 0; i < numOfCustomers; i++ {
+		invoice := <-invoicesChannel
 		err = invoice.Print()
 		if isError(err) {
 			log.Fatalln(err)
 		}
+		fmt.Println(invoice.customerName)
 	}
+
+	// for _, customer := range customers {
+	// 	invoice, err := generateInvoice(customer, inventory, taxes)
+	// 	err = invoice.Print()
+	// 	if isError(err) {
+	// 		log.Fatalln(err)
+	// 	}
+	// }
 
 }
