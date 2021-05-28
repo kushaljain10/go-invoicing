@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"errors"
 	"os"
 	"strconv"
 )
@@ -40,6 +41,14 @@ func fetchCustomers() ([]Customer, error) {
 		}
 
 		customerName := c[0]
+		if isEmptyString(customerName) {
+			return nil, errors.New("error while fetching customer details - no customer name found")
+		}
+
+		customerState := c[1]
+		if isEmptyString(customerState) {
+			return nil, errors.New("error while fetching customer details - no customer state found")
+		}
 
 		cart, err := fetchCart(customerName)
 		if isError(err) {
@@ -47,8 +56,8 @@ func fetchCustomers() ([]Customer, error) {
 		}
 
 		customers = append(customers, Customer{
-			name:  c[0],
-			state: c[1],
+			name:  customerName,
+			state: customerState,
 			cart:  *cart,
 		})
 	}
@@ -81,13 +90,21 @@ func fetchCart(customerName string) (*Cart, error) {
 			return nil, err
 		}
 
+		productName := c[0]
+		if isEmptyString(productName) {
+			return nil, errors.New("error while fetching cart details - no product name found")
+		}
+
 		quantity, err := strconv.Atoi(c[1])
 		if isError(err) {
 			return nil, err
 		}
+		if !isPositiveInt(quantity) {
+			return nil, errors.New("invalid product quantity for " + productName + " for customer - " + customerName)
+		}
 
 		cart.items = append(cart.items, cartItem{
-			name:     c[0],
+			name:     productName,
 			quantity: quantity,
 		})
 	}

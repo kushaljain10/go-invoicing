@@ -29,6 +29,14 @@ func getCSVReaderWithoutHeader(filename string) (*csv.Reader, error) {
 	return r, nil
 }
 
-func isPositiveNumber(num int) bool {
+func isPositiveInt(num int) bool {
 	return num > 0
+}
+
+func isPositiveFloat(num float64) bool {
+	return num > 0
+}
+
+func isEmptyString(s string) bool {
+	return len(s) == 0
 }

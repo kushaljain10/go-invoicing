@@ -6,8 +6,9 @@ import (
 )
 
 type Invoice struct {
-	customerName string
-	items        []invoiceItem
+	customerName     string
+	items            []invoiceItem
+	unavailableItems []string
 }
 
 type invoiceItem struct {
@@ -25,7 +26,8 @@ type invoiceItem struct {
 func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan Customer, invoicesChannel chan<- Invoice) {
 	for customer := range customersChannel {
 		invoice := Invoice{
-			customerName: customer.name,
+			customerName:     customer.name,
+			unavailableItems: make([]string, 0),
 		}
 		cart := customer.cart
 		sgst := taxes.SGSTList[customer.state]
@@ -35,7 +37,12 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan
 				productName: product.name,
 			}
 
+			if item.quantity > product.quantity {
+				invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
+				continue
+			}
 			item.quantity = product.quantity
+			product.quantity -= item.quantity
 			item.price = inventory.products[item.productName].price
 			item.totalBeforeTax = float64(item.quantity) * item.price
 			item.cgst = inventory.products[item.productName].cgst
@@ -69,6 +76,12 @@ func (inv Invoice) Print() error {
 				fmt.Sprintf("CGST: %.2f | ", item.cgstValue) +
 				fmt.Sprintf("Total: %.2f\n", item.totalAfterTax)
 		totalCartValue += item.totalAfterTax
+	}
+	if len(inv.unavailableItems) > 0 {
+		invoiceContent += "\nFollowing items were not in stock:\n"
+		for i, item := range inv.unavailableItems {
+			invoiceContent += fmt.Sprintf("%d. %s\n", i, item)
+		}
 	}
 	invoiceContent += fmt.Sprintf("\nTotal: %.2f", totalCartValue)
 	_, err = file.WriteString(invoiceContent)
