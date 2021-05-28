@@ -37,12 +37,20 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan
 				productName: product.name,
 			}
 
-			if item.quantity > product.quantity {
+			if product.quantity > inventory.products[item.productName].stock {
 				invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
 				continue
 			}
+			if item.productName == "Banana" && customer.name == "Hindi" {
+				fmt.Println(inventory.products[item.productName].stock)
+				fmt.Println(item.quantity)
+			}
 			item.quantity = product.quantity
-			product.quantity -= item.quantity
+			inventory.products[item.productName] = ProductValues{
+				price: inventory.products[item.productName].price,
+				cgst:  inventory.products[item.productName].cgst,
+				stock: inventory.products[item.productName].stock - item.quantity,
+			}
 			item.price = inventory.products[item.productName].price
 			item.totalBeforeTax = float64(item.quantity) * item.price
 			item.cgst = inventory.products[item.productName].cgst
@@ -80,7 +88,7 @@ func (inv Invoice) Print() error {
 	if len(inv.unavailableItems) > 0 {
 		invoiceContent += "\nFollowing items were not in stock:\n"
 		for i, item := range inv.unavailableItems {
-			invoiceContent += fmt.Sprintf("%d. %s\n", i, item)
+			invoiceContent += fmt.Sprintf("%d. %s\n", i+1, item)
 		}
 	}
 	invoiceContent += fmt.Sprintf("\nTotal: %.2f", totalCartValue)

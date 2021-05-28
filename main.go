@@ -26,8 +26,8 @@ func main() {
 	invoicesChannel := make(chan Invoice, numOfCustomers)
 
 	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+	// go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+	// go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
 
 	for _, c := range customers {
 		customersChannel <- c
