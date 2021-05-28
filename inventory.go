@@ -9,6 +9,7 @@ type Inventory struct {
 type ProductValues struct {
 	price float64
 	cgst  int
+	stock int
 }
 
 func getInventory() (*Inventory, error) {
@@ -40,9 +41,15 @@ func getInventory() (*Inventory, error) {
 			return nil, err
 		}
 
+		stock, err := strconv.Atoi(p[3])
+		if isError(err) {
+			return nil, err
+		}
+
 		inventory.products[p[0]] = ProductValues{
 			price: price,
 			cgst:  cgst,
+			stock: stock,
 		}
 	}
 	return inventory, nil

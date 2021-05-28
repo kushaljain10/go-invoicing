@@ -42,12 +42,4 @@ func main() {
 		}
 	}
 
-	// for _, customer := range customers {
-	// 	invoice, err := generateInvoice(customer, inventory, taxes)
-	// 	err = invoice.Print()
-	// 	if isError(err) {
-	// 		log.Fatalln(err)
-	// 	}
-	// }
-
 }

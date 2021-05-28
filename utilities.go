@@ -28,3 +28,7 @@ func getCSVReaderWithoutHeader(filename string) (*csv.Reader, error) {
 
 	return r, nil
 }
+
+func isPositiveNumber(num int) bool {
+	return num > 0
+}
