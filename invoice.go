@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 )
 
 type Invoice struct {
@@ -23,7 +24,8 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan Customer, invoicesChannel chan<- Invoice) {
+func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan Customer, invoicesChannel chan<- Invoice, mutex *sync.Mutex) {
+	mutex.Lock()
 	for customer := range customersChannel {
 		invoice := Invoice{
 			customerName:     customer.name,
@@ -63,6 +65,7 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan
 		}
 		invoicesChannel <- invoice
 	}
+	mutex.Unlock()
 }
 
 func (inv Invoice) Print() error {

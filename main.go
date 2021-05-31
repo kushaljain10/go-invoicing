@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 )
 
 func main() {
@@ -21,13 +22,15 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	mutex := &sync.Mutex{}
+
 	numOfCustomers := len(customers)
 	customersChannel := make(chan Customer, numOfCustomers)
 	invoicesChannel := make(chan Invoice, numOfCustomers)
 
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel)
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
+	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
 
 	for _, c := range customers {
 		customersChannel <- c

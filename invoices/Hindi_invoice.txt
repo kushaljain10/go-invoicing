@@ -1,0 +1,12 @@
+Customer Name: Hindi
+
+1. Hair Dryer | Quantity: 1 | Price: 800.00 | SGST: 40.00 | CGST: 96.00 | Total: 936.00
+2. Vacuum Cleaner | Quantity: 1 | Price: 2500.00 | SGST: 125.00 | CGST: 300.00 | Total: 2925.00
+3. Face Wash | Quantity: 2 | Price: 80.00 | SGST: 8.00 | CGST: 16.00 | Total: 184.00
+
+Following items were not in stock:
+1. Banana
+2. Apple
+3. Shampoo
+
+Total: 4045.00
