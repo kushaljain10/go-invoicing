@@ -24,25 +24,29 @@ func main() {
 
 	mutex := &sync.Mutex{}
 
-	numOfCustomers := len(customers)
-	customersChannel := make(chan Customer, numOfCustomers)
-	invoicesChannel := make(chan Invoice, numOfCustomers)
+	// numOfCustomers := len(customers)
+	// customersChannel := make(chan Customer, numOfCustomers)
+	// invoicesChannel := make(chan Invoice, numOfCustomers)
 
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
-	go generateInvoice(inventory, taxes, customersChannel, invoicesChannel, mutex)
+	wg := sync.WaitGroup{}
 
-	for _, c := range customers {
-		customersChannel <- c
+	for _, customer := range customers {
+		wg.Add(1)
+		go generateInvoice(inventory, taxes, customer, mutex, &wg)
 	}
-	close(customersChannel)
 
-	for i := 0; i < numOfCustomers; i++ {
-		invoice := <-invoicesChannel
-		err = invoice.Print()
-		if isError(err) {
-			log.Fatalln(err)
-		}
-	}
+	// for _, c := range customers {
+	// 	customersChannel <- c
+	// }
+	// close(customersChannel)
+
+	// for i := 0; i < numOfCustomers; i++ {
+	// 	invoice := <-invoicesChannel
+	// 	err = invoice.Print()
+	// 	if isError(err) {
+	// 		log.Fatalln(err)
+	// 	}
+	// }
+	wg.Wait()
 
 }

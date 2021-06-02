@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 )
@@ -24,48 +25,49 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(inventory *Inventory, taxes *Taxes, customersChannel <-chan Customer, invoicesChannel chan<- Invoice, mutex *sync.Mutex) {
+func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mutex *sync.Mutex, wg *sync.WaitGroup) {
+	// for customer := range customersChannel {
+	invoice := Invoice{
+		customerName:     customer.name,
+		unavailableItems: make([]string, 0),
+	}
+	cart := customer.cart
+	sgst := taxes.SGSTList[customer.state]
+
 	mutex.Lock()
-	for customer := range customersChannel {
-		invoice := Invoice{
-			customerName:     customer.name,
-			unavailableItems: make([]string, 0),
+	for _, product := range cart.items {
+		item := invoiceItem{
+			productName: product.name,
 		}
-		cart := customer.cart
-		sgst := taxes.SGSTList[customer.state]
 
-		for _, product := range cart.items {
-			item := invoiceItem{
-				productName: product.name,
-			}
-
-			if product.quantity > inventory.products[item.productName].stock {
-				invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
-				continue
-			}
-			if item.productName == "Banana" && customer.name == "Hindi" {
-				fmt.Println(inventory.products[item.productName].stock)
-				fmt.Println(item.quantity)
-			}
-			item.quantity = product.quantity
-			inventory.products[item.productName] = ProductValues{
-				price: inventory.products[item.productName].price,
-				cgst:  inventory.products[item.productName].cgst,
-				stock: inventory.products[item.productName].stock - item.quantity,
-			}
-			item.price = inventory.products[item.productName].price
-			item.totalBeforeTax = float64(item.quantity) * item.price
-			item.cgst = inventory.products[item.productName].cgst
-			item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
-			item.sgst = sgst
-			item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
-			item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
-
-			invoice.items = append(invoice.items, item)
+		if product.quantity > inventory.products[item.productName].stock {
+			invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
+			continue
 		}
-		invoicesChannel <- invoice
+		item.quantity = product.quantity
+		inventory.products[item.productName] = ProductValues{
+			price: inventory.products[item.productName].price,
+			cgst:  inventory.products[item.productName].cgst,
+			stock: inventory.products[item.productName].stock - item.quantity,
+		}
+		item.price = inventory.products[item.productName].price
+		item.totalBeforeTax = float64(item.quantity) * item.price
+		item.cgst = inventory.products[item.productName].cgst
+		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
+		item.sgst = sgst
+		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
+		item.totalAfterTax = item.totalBeforeTax + item.sgstValue + item.cgstValue
+
+		invoice.items = append(invoice.items, item)
 	}
 	mutex.Unlock()
+	err := invoice.Print()
+	if isError(err) {
+		log.Fatalln(err)
+	}
+	wg.Done()
+	// invoicesChannel <- invoice
+	// }
 }
 
 func (inv Invoice) Print() error {
