@@ -20,7 +20,7 @@ func getInventory() (*Inventory, error) {
 		products: make(map[string]ProductValues),
 	}
 
-	r, err := getCSVReaderWithoutHeader("products.csv")
+	r, err := getCSVReaderWithoutHeader("input/products.csv")
 	if isError(err) {
 		return nil, err
 	}

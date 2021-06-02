@@ -73,7 +73,7 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mute
 func (inv Invoice) Print() error {
 	var totalCartValue float64
 
-	file, err := os.Create("invoices/" + inv.customerName + "_invoice.txt")
+	file, err := os.Create("output/invoices/" + inv.customerName + "_invoice.txt")
 	if isError(err) {
 		return err
 	}

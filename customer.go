@@ -26,7 +26,7 @@ func fetchCustomers() ([]Customer, error) {
 
 	var customers []Customer
 
-	r, err := getCSVReaderWithoutHeader("customers.csv")
+	r, err := getCSVReaderWithoutHeader("input/customers.csv")
 	if isError(err) {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func fetchCart(customerName string) (*Cart, error) {
 		items: make([]cartItem, 0),
 	}
 
-	file, err := os.Open("cart/" + customerName + ".csv")
+	file, err := os.Open("input/cart/" + customerName + ".csv")
 	if isError(err) {
 		return nil, err
 	}
