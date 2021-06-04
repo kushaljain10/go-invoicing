@@ -5,14 +5,21 @@ import (
 	"sync"
 )
 
+var WorkQueue = make(chan Customer, 100)
+var InventoryData *Inventory
+var TaxesData *Taxes
+var Mu = &sync.Mutex{}
+var Wg = sync.WaitGroup{}
+
 func main() {
-	inventory, err := getInventory()
+	var err error
+	InventoryData, err = getInventory()
 	if isError(err) {
 		log.Fatalln(err)
 	}
 
-	taxes := NewTaxes()
-	err = taxes.getSGSTList()
+	TaxesData = NewTaxes()
+	err = TaxesData.getSGSTList()
 	if isError(err) {
 		log.Fatalln(err)
 	}
@@ -22,31 +29,12 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	mutex := &sync.Mutex{}
-
-	// numOfCustomers := len(customers)
-	// customersChannel := make(chan Customer, numOfCustomers)
-	// invoicesChannel := make(chan Invoice, numOfCustomers)
-
-	wg := sync.WaitGroup{}
-
+	StartDispatcher(3)
 	for _, customer := range customers {
-		wg.Add(1)
-		go generateInvoice(inventory, taxes, customer, mutex, &wg)
+		Wg.Add(1)
+		WorkQueue <- customer
 	}
 
-	// for _, c := range customers {
-	// 	customersChannel <- c
-	// }
-	// close(customersChannel)
-
-	// for i := 0; i < numOfCustomers; i++ {
-	// 	invoice := <-invoicesChannel
-	// 	err = invoice.Print()
-	// 	if isError(err) {
-	// 		log.Fatalln(err)
-	// 	}
-	// }
-	wg.Wait()
+	Wg.Wait()
 
 }

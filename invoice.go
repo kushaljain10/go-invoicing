@@ -25,7 +25,7 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mutex *sync.Mutex, wg *sync.WaitGroup) {
+func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mutex *sync.Mutex) {
 	// for customer := range customersChannel {
 	invoice := Invoice{
 		customerName:     customer.name,
@@ -65,7 +65,7 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mute
 	if isError(err) {
 		log.Fatalln(err)
 	}
-	wg.Done()
+	Wg.Done()
 	// invoicesChannel <- invoice
 	// }
 }
