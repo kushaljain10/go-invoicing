@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/csv"
 	"errors"
-	"os"
 	"strconv"
 )
 
@@ -22,17 +20,21 @@ type cartItem struct {
 	quantity int
 }
 
+// Directory Names
+var inputDirectory = "input"
+var cartDirectory = inputDirectory + "/cart"
+
 func fetchCustomers() ([]Customer, error) {
 
 	var customers []Customer
 
-	r, err := getCSVReaderWithoutHeader("input/customers.csv")
+	reader, err := getCSVReaderWithoutHeader(inputDirectory + "/customers.csv")
 	if isError(err) {
 		return nil, err
 	}
 
 	for {
-		c, err := r.Read()
+		customer, err := reader.Read()
 		if isEOF(err) {
 			break
 		}
@@ -40,14 +42,20 @@ func fetchCustomers() ([]Customer, error) {
 			return nil, err
 		}
 
-		customerName := c[0]
+		customerName := customer[0]
 		if isEmptyString(customerName) {
 			return nil, errors.New("error while fetching customer details - no customer name found")
 		}
+		if !matchRegex(customerName, "^[a-zA-Z0-9_ ]*$") {
+			return nil, errors.New("Invalid customer name - " + customerName)
+		}
 
-		customerState := c[1]
+		customerState := customer[1]
 		if isEmptyString(customerState) {
 			return nil, errors.New("error while fetching customer details - no customer state found")
+		}
+		if !matchRegex(customerState, "^[A-Z]*$") {
+			return nil, errors.New("Invalid state code - " + customerState)
 		}
 
 		cart, err := fetchCart(customerName)
@@ -69,20 +77,13 @@ func fetchCart(customerName string) (*Cart, error) {
 		items: make([]cartItem, 0),
 	}
 
-	file, err := os.Open("input/cart/" + customerName + ".csv")
+	reader, err := getCSVReaderWithoutHeader(cartDirectory + "/" + customerName + ".csv")
 	if isError(err) {
-		return nil, err
-	}
-	defer file.Close()
-
-	r := csv.NewReader(file)
-	_, err = r.Read()
-	if isError(err) {
-		return nil, err
+		return nil, errors.New("Error while fetching the cart for customer - " + customerName)
 	}
 
 	for {
-		c, err := r.Read()
+		item, err := reader.Read()
 		if isEOF(err) {
 			break
 		}
@@ -90,17 +91,17 @@ func fetchCart(customerName string) (*Cart, error) {
 			return nil, err
 		}
 
-		productName := c[0]
+		productName := item[0]
 		if isEmptyString(productName) {
 			return nil, errors.New("error while fetching cart details - no product name found")
 		}
-
-		quantity, err := strconv.Atoi(c[1])
-		if isError(err) {
-			return nil, err
+		if !isAlphaNumeric(productName) {
+			return nil, errors.New("Invalid product name - " + productName + " for customer - " + customerName)
 		}
-		if !isPositiveInt(quantity) {
-			return nil, errors.New("invalid product quantity for " + productName + " for customer - " + customerName)
+
+		quantity, err := strconv.Atoi(item[1])
+		if isError(err) || !isPositiveInt(quantity) {
+			return nil, errors.New("Invalid quantity for the product - " + productName + " for customer - " + customerName)
 		}
 
 		cart.items = append(cart.items, cartItem{

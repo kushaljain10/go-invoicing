@@ -26,13 +26,15 @@ type invoiceItem struct {
 }
 
 func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mutex *sync.Mutex) {
-	// for customer := range customersChannel {
 	invoice := Invoice{
 		customerName:     customer.name,
 		unavailableItems: make([]string, 0),
 	}
 	cart := customer.cart
-	sgst := taxes.SGSTList[customer.state]
+	sgst, ok := taxes.SGSTList[customer.state]
+	if !ok {
+		log.Fatalf("State code '%s' for customer '%s' does not exist.", customer.state, customer.name)
+	}
 
 	mutex.Lock()
 	for _, product := range cart.items {
@@ -66,8 +68,6 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mute
 		log.Fatalln(err)
 	}
 	Wg.Done()
-	// invoicesChannel <- invoice
-	// }
 }
 
 func (inv Invoice) Print() error {

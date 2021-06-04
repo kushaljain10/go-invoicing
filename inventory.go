@@ -20,13 +20,13 @@ func getInventory() (*Inventory, error) {
 		products: make(map[string]ProductValues),
 	}
 
-	r, err := getCSVReaderWithoutHeader("input/products.csv")
+	reader, err := getCSVReaderWithoutHeader("input/products.csv")
 	if isError(err) {
 		return nil, err
 	}
 
 	for {
-		p, err := r.Read()
+		currentProduct, err := reader.Read()
 		if isEOF(err) {
 			break
 		}
@@ -34,31 +34,27 @@ func getInventory() (*Inventory, error) {
 			return nil, err
 		}
 
-		price, err := strconv.ParseFloat(p[1], 64)
-		if isError(err) {
-			return nil, err
-		}
-		if !isPositiveFloat(price) {
-			return nil, errors.New("Invalid price in inventory for the product - " + p[0])
+		productName := currentProduct[0]
+		if !isAlphaNumeric(productName) {
+			return nil, errors.New("Invalid product name - " + productName)
 		}
 
-		cgst, err := strconv.Atoi(p[2])
-		if isError(err) {
-			return nil, err
-		}
-		if !isPositiveInt(cgst) {
-			return nil, errors.New("Invalid CGST for the product - " + p[0])
+		price, err := strconv.ParseFloat(currentProduct[1], 64)
+		if isError(err) || !isPositiveFloat(price) {
+			return nil, errors.New("Invalid price for the product - " + currentProduct[0])
 		}
 
-		stock, err := strconv.Atoi(p[3])
-		if isError(err) {
-			return nil, err
-		}
-		if !isPositiveInt(stock) {
-			return nil, errors.New("Invalid stock quantity for the product - " + p[0])
+		cgst, err := strconv.Atoi(currentProduct[2])
+		if isError(err) || !isPositiveInt(cgst) {
+			return nil, errors.New("Invalid CGST for the product - " + currentProduct[0])
 		}
 
-		inventory.products[p[0]] = ProductValues{
+		stock, err := strconv.Atoi(currentProduct[3])
+		if isError(err) || !isPositiveInt(stock) {
+			return nil, errors.New("Invalid stock quantity for the product - " + currentProduct[0])
+		}
+
+		inventory.products[productName] = ProductValues{
 			price: price,
 			cgst:  cgst,
 			stock: stock,

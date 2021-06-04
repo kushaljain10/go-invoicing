@@ -30,6 +30,7 @@ func main() {
 	}
 
 	StartDispatcher(3)
+
 	for _, customer := range customers {
 		Wg.Add(1)
 		WorkQueue <- customer

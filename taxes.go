@@ -17,13 +17,13 @@ func NewTaxes() *Taxes {
 
 func (taxes *Taxes) getSGSTList() error {
 
-	r, err := getCSVReaderWithoutHeader("input/SGST.csv")
+	reader, err := getCSVReaderWithoutHeader("input/SGST.csv")
 	if isError(err) {
 		return err
 	}
 
 	for {
-		s, err := r.Read()
+		sgst, err := reader.Read()
 		if isEOF(err) {
 			break
 		}
@@ -31,14 +31,16 @@ func (taxes *Taxes) getSGSTList() error {
 			return err
 		}
 
-		sgst, err := strconv.Atoi(s[1])
-		if isError(err) {
-			return err
+		sgstState := sgst[0]
+		if !matchRegex(sgstState, "^[A-Z]*$") {
+			return errors.New("Invalid state code in database -" + sgstState)
 		}
-		if !isPositiveInt(sgst) {
-			return errors.New("Invalid SGST for the state - " + s[0])
+
+		sgstValue, err := strconv.Atoi(sgst[1])
+		if isError(err) || !isPositiveInt(sgstValue) {
+			return errors.New("Invalid SGST value for the state in database - " + sgst[0])
 		}
-		taxes.SGSTList[s[0]] = sgst
+		taxes.SGSTList[sgstState] = sgstValue
 	}
 	return err
 }
