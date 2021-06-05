@@ -1,12 +1,12 @@
 Customer Name: Marathi
 
-1. Shampoo | Quantity: 1 | Price: 100.00 | SGST: 8.00 | CGST: 10.00 | Total: 118.00
-2. Earphones | Quantity: 1 | Price: 250.00 | SGST: 20.00 | CGST: 30.00 | Total: 300.00
-3. Vacuum Cleaner | Quantity: 1 | Price: 2500.00 | SGST: 200.00 | CGST: 300.00 | Total: 3000.00
+1. Earphones | Quantity: 1 | Price: 250.00 | SGST: 20.00 | CGST: 30.00 | Total: 300.00
+2. Vacuum Cleaner | Quantity: 1 | Price: 2500.00 | SGST: 200.00 | CGST: 300.00 | Total: 3000.00
 
 Following items were not in stock:
 1. Banana
 2. Watermelon
 3. FaceWash
+4. Shampoo
 
-Total: 3418.00
+Total: 3300.00

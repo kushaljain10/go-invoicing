@@ -1,25 +1,25 @@
-package main
+package workerpool
 
 import (
-	"log"
 	"sync"
-
-	"github.com/kushaljain/go-invoicing/customer"
-	"github.com/kushaljain/go-invoicing/invoice"
 )
 
 type Worker struct {
 	ID          int
-	Work        chan customer.Customer
-	WorkerQueue chan chan customer.Customer
+	Work        chan WorkRequest
+	WorkerQueue chan chan WorkRequest
 	QuitChan    chan bool
 	WaitGroup   *sync.WaitGroup
 }
 
-func NewWorker(id int, workerQueue chan chan customer.Customer, Wg *sync.WaitGroup) Worker {
+type WorkRequest interface {
+	Process()
+}
+
+func NewWorker(id int, workerQueue chan chan WorkRequest, Wg *sync.WaitGroup) Worker {
 	worker := Worker{
 		ID:          id,
-		Work:        make(chan customer.Customer),
+		Work:        make(chan WorkRequest),
 		WorkerQueue: workerQueue,
 		QuitChan:    make(chan bool),
 		WaitGroup:   Wg,
@@ -34,10 +34,7 @@ func (w Worker) Start() {
 
 			select {
 			case work := <-w.Work:
-				err := invoice.GenerateInvoice(InventoryData, TaxesData, work, Discounts, Mu, &Wg)
-				if err != nil {
-					log.Fatalln(err)
-				}
+				work.Process()
 			case <-w.QuitChan:
 				return
 			}

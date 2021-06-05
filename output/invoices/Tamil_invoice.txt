@@ -1,10 +1,10 @@
 Customer Name: Tamil
 
-1. Hair Dryer | Quantity: 1 | Price: 800.00 | SGST: 24.00 | CGST: 96.00 | Total: 920.00
+1. Shampoo | Quantity: 1 | Price: 100.00 | SGST: 3.00 | CGST: 10.00 | Total: 113.00
+2. Hair Dryer | Quantity: 1 | Price: 800.00 | SGST: 24.00 | CGST: 96.00 | Total: 920.00
 
 Following items were not in stock:
 1. Apple
 2. Banana
-3. Shampoo
 
-Total: 920.00
+Total: 1033.00

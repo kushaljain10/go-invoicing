@@ -1,16 +1,14 @@
-package main
+package workerpool
 
 import (
 	"sync"
-
-	"github.com/kushaljain/go-invoicing/customer"
 )
 
-var WorkerQueue chan chan customer.Customer
+var WorkerQueue chan chan WorkRequest
 
 func StartDispatcher(nworkers int, Wg *sync.WaitGroup) {
 	// First initialize the channel we are going to put the workers' work into.
-	WorkerQueue = make(chan chan customer.Customer, nworkers)
+	WorkerQueue = make(chan chan WorkRequest, nworkers)
 
 	// now create all of our workers
 	for i := 0; i < nworkers; i++ {
