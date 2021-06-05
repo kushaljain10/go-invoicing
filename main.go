@@ -14,10 +14,11 @@ var WorkQueue = make(chan customer.Customer, 100)
 var InventoryData *inventory.Inventory
 var TaxesData *taxes.Taxes
 var Discounts map[string]float64
+var customers []customer.Customer
 var Mu = &sync.Mutex{}
 var Wg = sync.WaitGroup{}
 
-func main() {
+func init() {
 	var err error
 	InventoryData, err = inventory.GetInventory()
 	if utilities.IsError(err) {
@@ -32,10 +33,13 @@ func main() {
 
 	Discounts = map[string]float64{"UPI": 5}
 
-	customers, err := customer.FetchCustomers()
+	customers, err = customer.FetchCustomers()
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
+}
+
+func main() {
 
 	StartDispatcher(3, &Wg)
 
