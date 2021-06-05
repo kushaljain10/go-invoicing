@@ -1,16 +1,22 @@
-package main
+package invoice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"sync"
+
+	"github.com/kushaljain/go-invoicing/customer"
+	"github.com/kushaljain/go-invoicing/inventory"
+	"github.com/kushaljain/go-invoicing/taxes"
+	"github.com/kushaljain/go-invoicing/utilities"
 )
 
 type Invoice struct {
 	customerName     string
 	items            []invoiceItem
 	unavailableItems []string
+	discount         float64
 }
 
 type invoiceItem struct {
@@ -25,36 +31,48 @@ type invoiceItem struct {
 	totalAfterTax  float64
 }
 
-func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mutex *sync.Mutex) {
+// var outputDirectory = ""
+
+func GenerateInvoice(inv *inventory.Inventory, tax *taxes.Taxes, customer customer.Customer, discounts map[string]float64, mutex *sync.Mutex, Wg *sync.WaitGroup) error {
 	invoice := Invoice{
-		customerName:     customer.name,
+		customerName:     customer.Name,
 		unavailableItems: make([]string, 0),
+		discount:         0,
 	}
-	cart := customer.cart
-	sgst, ok := taxes.SGSTList[customer.state]
+
+	discount, ok := discounts[customer.PaymentMode]
+	if ok {
+		if discount <= 0 {
+			return errors.New("Invalid discount amount for customer - " + invoice.customerName)
+		}
+		invoice.discount = discount
+	}
+
+	cart := customer.Cart
+	sgst, ok := tax.SGSTList[customer.State]
 	if !ok {
-		log.Fatalf("State code '%s' for customer '%s' does not exist.", customer.state, customer.name)
+		return fmt.Errorf("state code '%s' for customer '%s' does not exist", customer.State, customer.Name)
 	}
 
 	mutex.Lock()
-	for _, product := range cart.items {
+	for _, product := range cart.Items {
 		item := invoiceItem{
-			productName: product.name,
+			productName: product.Name,
 		}
 
-		if product.quantity > inventory.products[item.productName].stock {
+		if product.Quantity > inv.Products[item.productName].Stock {
 			invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
 			continue
 		}
-		item.quantity = product.quantity
-		inventory.products[item.productName] = ProductValues{
-			price: inventory.products[item.productName].price,
-			cgst:  inventory.products[item.productName].cgst,
-			stock: inventory.products[item.productName].stock - item.quantity,
+		item.quantity = product.Quantity
+		inv.Products[item.productName] = inventory.ProductValues{
+			Price: inv.Products[item.productName].Price,
+			Cgst:  inv.Products[item.productName].Cgst,
+			Stock: inv.Products[item.productName].Stock - item.quantity,
 		}
-		item.price = inventory.products[item.productName].price
+		item.price = inv.Products[item.productName].Price
 		item.totalBeforeTax = float64(item.quantity) * item.price
-		item.cgst = inventory.products[item.productName].cgst
+		item.cgst = inv.Products[item.productName].Cgst
 		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
 		item.sgst = sgst
 		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
@@ -64,17 +82,18 @@ func generateInvoice(inventory *Inventory, taxes *Taxes, customer Customer, mute
 	}
 	mutex.Unlock()
 	err := invoice.Print()
-	if isError(err) {
-		log.Fatalln(err)
+	if utilities.IsError(err) {
+		return err
 	}
 	Wg.Done()
+	return nil
 }
 
 func (inv Invoice) Print() error {
 	var totalCartValue float64
 
 	file, err := os.Create("output/invoices/" + inv.customerName + "_invoice.txt")
-	if isError(err) {
+	if utilities.IsError(err) {
 		return err
 	}
 	defer file.Close()
@@ -96,9 +115,17 @@ func (inv Invoice) Print() error {
 			invoiceContent += fmt.Sprintf("%d. %s\n", i+1, item)
 		}
 	}
-	invoiceContent += fmt.Sprintf("\nTotal: %.2f", totalCartValue)
+	if inv.discount > 0 {
+		discountAmount := totalCartValue * (inv.discount / 100)
+		totalAfterDiscount := totalCartValue - discountAmount
+		invoiceContent += fmt.Sprintf("\nTotal Cart Value: %.2f", totalCartValue)
+		invoiceContent += fmt.Sprintf("\nDiscount (%.1f%%): %.2f", inv.discount, discountAmount)
+		invoiceContent += fmt.Sprintf("\nTotal: %.f", totalAfterDiscount)
+	} else {
+		invoiceContent += fmt.Sprintf("\nTotal: %.2f", totalCartValue)
+	}
 	_, err = file.WriteString(invoiceContent)
-	if isError(err) {
+	if utilities.IsError(err) {
 		return err
 	}
 	return nil

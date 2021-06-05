@@ -1,63 +1,65 @@
-package main
+package inventory
 
 import (
 	"errors"
 	"strconv"
+
+	"github.com/kushaljain/go-invoicing/utilities"
 )
 
 type Inventory struct {
-	products map[string]ProductValues
+	Products map[string]ProductValues
 }
 
 type ProductValues struct {
-	price float64
-	cgst  int
-	stock int
+	Price float64
+	Cgst  int
+	Stock int
 }
 
-func getInventory() (*Inventory, error) {
+func GetInventory() (*Inventory, error) {
 	inventory := &Inventory{
-		products: make(map[string]ProductValues),
+		Products: make(map[string]ProductValues),
 	}
 
-	reader, err := getCSVReaderWithoutHeader("input/products.csv")
-	if isError(err) {
+	reader, err := utilities.GetCSVReaderWithoutHeader("input/products.csv")
+	if utilities.IsError(err) {
 		return nil, err
 	}
 
 	for {
 		currentProduct, err := reader.Read()
-		if isEOF(err) {
+		if utilities.IsEOF(err) {
 			break
 		}
-		if isError(err) {
+		if utilities.IsError(err) {
 			return nil, err
 		}
 
 		productName := currentProduct[0]
-		if !isAlphaNumeric(productName) {
+		if !utilities.IsAlphaNumeric(productName) {
 			return nil, errors.New("Invalid product name - " + productName)
 		}
 
 		price, err := strconv.ParseFloat(currentProduct[1], 64)
-		if isError(err) || !isPositiveFloat(price) {
+		if utilities.IsError(err) || !utilities.IsPositiveFloat(price) {
 			return nil, errors.New("Invalid price for the product - " + currentProduct[0])
 		}
 
 		cgst, err := strconv.Atoi(currentProduct[2])
-		if isError(err) || !isPositiveInt(cgst) {
+		if utilities.IsError(err) || !utilities.IsPositiveInt(cgst) {
 			return nil, errors.New("Invalid CGST for the product - " + currentProduct[0])
 		}
 
 		stock, err := strconv.Atoi(currentProduct[3])
-		if isError(err) || !isPositiveInt(stock) {
+		if utilities.IsError(err) || !utilities.IsPositiveInt(stock) {
 			return nil, errors.New("Invalid stock quantity for the product - " + currentProduct[0])
 		}
 
-		inventory.products[productName] = ProductValues{
-			price: price,
-			cgst:  cgst,
-			stock: stock,
+		inventory.Products[productName] = ProductValues{
+			Price: price,
+			Cgst:  cgst,
+			Stock: stock,
 		}
 	}
 	return inventory, nil

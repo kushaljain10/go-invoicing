@@ -1,20 +1,28 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"sync"
+
+	"github.com/kushaljain/go-invoicing/customer"
+	"github.com/kushaljain/go-invoicing/invoice"
+)
 
 type Worker struct {
 	ID          int
-	Work        chan Customer
-	WorkerQueue chan chan Customer
+	Work        chan customer.Customer
+	WorkerQueue chan chan customer.Customer
 	QuitChan    chan bool
+	WaitGroup   *sync.WaitGroup
 }
 
-func NewWorker(id int, workerQueue chan chan Customer) Worker {
+func NewWorker(id int, workerQueue chan chan customer.Customer, Wg *sync.WaitGroup) Worker {
 	worker := Worker{
 		ID:          id,
-		Work:        make(chan Customer),
+		Work:        make(chan customer.Customer),
 		WorkerQueue: workerQueue,
 		QuitChan:    make(chan bool),
+		WaitGroup:   Wg,
 	}
 	return worker
 }
@@ -26,8 +34,10 @@ func (w Worker) Start() {
 
 			select {
 			case work := <-w.Work:
-				generateInvoice(InventoryData, TaxesData, work, Mu)
-				fmt.Println("invoicing of", work.name, "done by", w.ID)
+				err := invoice.GenerateInvoice(InventoryData, TaxesData, work, Discounts, Mu, &Wg)
+				if err != nil {
+					log.Fatalln(err)
+				}
 			case <-w.QuitChan:
 				return
 			}

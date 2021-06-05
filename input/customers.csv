@@ -1,5 +1,5 @@
-CustomerName,CustomerState
-Tamil,TN
-Hindi,RJ
-Marathi,MH
-Punjabi,PB
+CustomerName,CustomerState,PaymentMode
+Tamil,TN,Card
+Hindi,RJ,UPI
+Marathi,MH,Cash
+Punjabi,PB,UPI

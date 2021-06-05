@@ -3,33 +3,41 @@ package main
 import (
 	"log"
 	"sync"
+
+	"github.com/kushaljain/go-invoicing/customer"
+	"github.com/kushaljain/go-invoicing/inventory"
+	"github.com/kushaljain/go-invoicing/taxes"
+	"github.com/kushaljain/go-invoicing/utilities"
 )
 
-var WorkQueue = make(chan Customer, 100)
-var InventoryData *Inventory
-var TaxesData *Taxes
+var WorkQueue = make(chan customer.Customer, 100)
+var InventoryData *inventory.Inventory
+var TaxesData *taxes.Taxes
+var Discounts map[string]float64
 var Mu = &sync.Mutex{}
 var Wg = sync.WaitGroup{}
 
 func main() {
 	var err error
-	InventoryData, err = getInventory()
-	if isError(err) {
+	InventoryData, err = inventory.GetInventory()
+	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	TaxesData = NewTaxes()
-	err = TaxesData.getSGSTList()
-	if isError(err) {
+	TaxesData = taxes.NewTaxes()
+	err = TaxesData.GetSGSTList()
+	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	customers, err := fetchCustomers()
-	if isError(err) {
+	Discounts = map[string]float64{"UPI": 5}
+
+	customers, err := customer.FetchCustomers()
+	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	StartDispatcher(3)
+	StartDispatcher(3, &Wg)
 
 	for _, customer := range customers {
 		Wg.Add(1)

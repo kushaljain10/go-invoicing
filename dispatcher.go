@@ -1,17 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"sync"
 
-var WorkerQueue chan chan Customer
+	"github.com/kushaljain/go-invoicing/customer"
+)
 
-func StartDispatcher(nworkers int) {
+var WorkerQueue chan chan customer.Customer
+
+func StartDispatcher(nworkers int, Wg *sync.WaitGroup) {
 	// First initialize the channel we are going to put the workers' work into.
-	WorkerQueue = make(chan chan Customer, nworkers)
+	WorkerQueue = make(chan chan customer.Customer, nworkers)
 
 	// now create all of our workers
 	for i := 0; i < nworkers; i++ {
-		fmt.Println("Starting worker", i+1)
-		worker := NewWorker(i+1, WorkerQueue)
+		worker := NewWorker(i+1, WorkerQueue, Wg)
 		worker.Start()
 	}
 

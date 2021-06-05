@@ -1,8 +1,10 @@
-package main
+package taxes
 
 import (
 	"errors"
 	"strconv"
+
+	"github.com/kushaljain/go-invoicing/utilities"
 )
 
 type Taxes struct {
@@ -15,29 +17,29 @@ func NewTaxes() *Taxes {
 	}
 }
 
-func (taxes *Taxes) getSGSTList() error {
+func (taxes *Taxes) GetSGSTList() error {
 
-	reader, err := getCSVReaderWithoutHeader("input/SGST.csv")
-	if isError(err) {
+	reader, err := utilities.GetCSVReaderWithoutHeader("input/SGST.csv")
+	if utilities.IsError(err) {
 		return err
 	}
 
 	for {
 		sgst, err := reader.Read()
-		if isEOF(err) {
+		if utilities.IsEOF(err) {
 			break
 		}
-		if isError(err) {
+		if utilities.IsError(err) {
 			return err
 		}
 
 		sgstState := sgst[0]
-		if !matchRegex(sgstState, "^[A-Z]*$") {
+		if !utilities.MatchRegex(sgstState, "^[A-Z]*$") {
 			return errors.New("Invalid state code in database -" + sgstState)
 		}
 
 		sgstValue, err := strconv.Atoi(sgst[1])
-		if isError(err) || !isPositiveInt(sgstValue) {
+		if utilities.IsError(err) || !utilities.IsPositiveInt(sgstValue) {
 			return errors.New("Invalid SGST value for the state in database - " + sgst[0])
 		}
 		taxes.SGSTList[sgstState] = sgstValue
