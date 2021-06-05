@@ -94,7 +94,7 @@ func (inv Invoice) Print() error {
 
 	file, err := os.Create("output/invoices/" + inv.customerName + "_invoice.txt")
 	if utilities.IsError(err) {
-		return err
+		return errors.New("Error in creating invoice file of - " + inv.customerName)
 	}
 	defer file.Close()
 
@@ -126,7 +126,7 @@ func (inv Invoice) Print() error {
 	}
 	_, err = file.WriteString(invoiceContent)
 	if utilities.IsError(err) {
-		return err
+		return errors.New("Error in writing to invoice file of - " + inv.customerName)
 	}
 	return nil
 }

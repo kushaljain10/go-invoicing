@@ -21,7 +21,7 @@ func (taxes *Taxes) GetSGSTList() error {
 
 	reader, err := utilities.GetCSVReaderWithoutHeader("input/SGST.csv")
 	if utilities.IsError(err) {
-		return err
+		return errors.New("error in reading from SGST File")
 	}
 
 	for {
@@ -30,7 +30,7 @@ func (taxes *Taxes) GetSGSTList() error {
 			break
 		}
 		if utilities.IsError(err) {
-			return err
+			return errors.New("error while reading from SGST file")
 		}
 
 		sgstState := sgst[0]
@@ -44,5 +44,5 @@ func (taxes *Taxes) GetSGSTList() error {
 		}
 		taxes.SGSTList[sgstState] = sgstValue
 	}
-	return err
+	return nil
 }
