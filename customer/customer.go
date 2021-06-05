@@ -31,9 +31,13 @@ func FetchCustomers() ([]Customer, error) {
 
 	var customers []Customer
 
-	reader, err := utilities.GetCSVReaderWithoutHeader(inputDirectory + "/customers.csv")
+	reader, err := utilities.GetCSVReader(inputDirectory + "/customers.csv")
 	if utilities.IsError(err) {
-		return nil, err
+		return nil, errors.New("Error while fetching the customer details - " + err.Error())
+	}
+	headerIndices, err := utilities.GetCSVHeaderIndices(reader)
+	if utilities.IsError(err) {
+		return nil, errors.New("error while fetching customer details - " + err.Error())
 	}
 
 	for {
@@ -42,34 +46,18 @@ func FetchCustomers() ([]Customer, error) {
 			break
 		}
 		if utilities.IsError(err) {
+			return nil, errors.New("error in reading from CSV")
+		}
+
+		customerName, nameErr := utilities.ValidateString(customer[headerIndices["CustomerName"]], "^[a-zA-Z0-9_ ]*$")
+		customerState, stateErr := utilities.ValidateString(customer[headerIndices["CustomerState"]], "^[A-Z]*$")
+		paymentMode, paymentErr := utilities.ValidateString(customer[headerIndices["PaymentMode"]], "^[a-zA-Z]*$")
+
+		if err := utilities.CheckErrors(nameErr, stateErr, paymentErr); err != nil {
 			return nil, err
 		}
 
-		customerName := customer[0]
-		if utilities.IsEmptyString(customerName) {
-			return nil, errors.New("error while fetching customer details - customer name not found")
-		}
-		if !utilities.MatchRegex(customerName, "^[a-zA-Z0-9_ ]*$") {
-			return nil, errors.New("Invalid customer name - " + customerName)
-		}
-
-		customerState := customer[1]
-		if utilities.IsEmptyString(customerState) {
-			return nil, errors.New("error while fetching customer details - customer state not found")
-		}
-		if !utilities.MatchRegex(customerState, "^[A-Z]*$") {
-			return nil, errors.New("Invalid state code - " + customerState)
-		}
-
-		paymentMode := customer[2]
-		if utilities.IsEmptyString(paymentMode) {
-			return nil, errors.New("error while fetching customer details - payment mode not found")
-		}
-		if !utilities.MatchRegex(paymentMode, "^[a-zA-Z]*$") {
-			return nil, errors.New("Invalid Payment Mode - " + paymentMode)
-		}
-
-		cart, err := FetchCart(customerName)
+		cart, err := fetchCart(customerName)
 		if utilities.IsError(err) {
 			return nil, err
 		}
@@ -84,14 +72,18 @@ func FetchCustomers() ([]Customer, error) {
 	return customers, nil
 }
 
-func FetchCart(customerName string) (*Cart, error) {
+func fetchCart(customerName string) (*Cart, error) {
 	cart := &Cart{
 		Items: make([]cartItem, 0),
 	}
 
-	reader, err := utilities.GetCSVReaderWithoutHeader(cartDirectory + "/" + customerName + ".csv")
+	reader, err := utilities.GetCSVReader(cartDirectory + "/" + customerName + ".csv")
 	if utilities.IsError(err) {
-		return nil, errors.New("Error while fetching the cart for customer - " + customerName)
+		return nil, errors.New("Error while fetching the cart for - " + customerName + ": " + err.Error())
+	}
+	headerIndices, err := utilities.GetCSVHeaderIndices(reader)
+	if utilities.IsError(err) {
+		return nil, errors.New("error while fetching the cart for - " + customerName + ": " + err.Error())
 	}
 
 	for {
@@ -103,12 +95,9 @@ func FetchCart(customerName string) (*Cart, error) {
 			return nil, err
 		}
 
-		productName := item[0]
-		if utilities.IsEmptyString(productName) {
-			return nil, errors.New("error while fetching cart details - no product name found")
-		}
-		if !utilities.IsAlphaNumeric(productName) {
-			return nil, errors.New("Invalid product name - " + productName + " for customer - " + customerName)
+		productName, nameErr := utilities.ValidateString(item[headerIndices["ProductName"]], utilities.ALPHANUMERIC_REGEX)
+		if utilities.IsError(nameErr) {
+			return nil, errors.New("error while fetching product name - " + err.Error())
 		}
 
 		quantity, err := strconv.Atoi(item[1])

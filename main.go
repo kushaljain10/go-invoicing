@@ -13,28 +13,28 @@ import (
 )
 
 var (
-	InventoryData *inventory.Inventory
-	TaxesData     *taxes.Taxes
-	Discounts     map[string]float64
+	inventoryData *inventory.Inventory
+	taxesData     *taxes.Taxes
+	discounts     map[string]float64
 	customers     []customer.Customer
-	Mu            = &sync.Mutex{}
-	Wg            = sync.WaitGroup{}
+	mu            = &sync.Mutex{}
+	wg            = sync.WaitGroup{}
 )
 
 func init() {
 	var err error
-	InventoryData, err = inventory.GetInventory()
+	inventoryData, err = inventory.GetInventory()
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	TaxesData = taxes.NewTaxes()
-	err = TaxesData.GetSGSTList()
+	taxesData = taxes.NewTaxes()
+	err = taxesData.GetSGSTList()
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	Discounts = map[string]float64{"UPI": 5}
+	discounts = map[string]float64{"UPI": 5}
 
 	customers, err = customer.FetchCustomers()
 	if utilities.IsError(err) {
@@ -47,7 +47,7 @@ type generateInvoiceWork struct {
 }
 
 func (w generateInvoiceWork) Process() {
-	err := invoice.GenerateInvoice(InventoryData, TaxesData, w.customer, Discounts, Mu, &Wg)
+	err := invoice.GenerateInvoice(inventoryData, taxesData, w.customer, discounts, mu, &wg)
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
@@ -55,12 +55,12 @@ func (w generateInvoiceWork) Process() {
 
 func main() {
 
-	workerpool.StartDispatcher(3, &Wg)
+	workerpool.StartDispatcher(3, &wg)
 
 	for _, customer := range customers {
-		Wg.Add(1)
+		wg.Add(1)
 		workerpool.Collector(&generateInvoiceWork{customer: customer})
 	}
 
-	Wg.Wait()
+	wg.Wait()
 }

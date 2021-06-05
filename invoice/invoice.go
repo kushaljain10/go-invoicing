@@ -60,19 +60,15 @@ func GenerateInvoice(inv *inventory.Inventory, tax *taxes.Taxes, customer custom
 			productName: product.Name,
 		}
 
-		if product.Quantity > inv.Products[item.productName].Stock {
+		if product.Quantity > inv.GetStock(item.productName) {
 			invoice.unavailableItems = append(invoice.unavailableItems, item.productName)
 			continue
 		}
 		item.quantity = product.Quantity
-		inv.Products[item.productName] = inventory.ProductValues{
-			Price: inv.Products[item.productName].Price,
-			Cgst:  inv.Products[item.productName].Cgst,
-			Stock: inv.Products[item.productName].Stock - item.quantity,
-		}
-		item.price = inv.Products[item.productName].Price
+		inv.UpdateProductStock(item.productName, (-1)*item.quantity)
+		item.price = inv.GetPrice(item.productName)
 		item.totalBeforeTax = float64(item.quantity) * item.price
-		item.cgst = inv.Products[item.productName].Cgst
+		item.cgst = inv.GetCgst(item.productName)
 		item.cgstValue = item.totalBeforeTax * (float64(item.cgst) / 100)
 		item.sgst = sgst
 		item.sgstValue = item.totalBeforeTax * (float64(item.sgst) / 100)
