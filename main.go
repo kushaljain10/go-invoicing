@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/kushaljain/go-invoicing/cache"
 	"github.com/kushaljain/go-invoicing/customer"
 	"github.com/kushaljain/go-invoicing/inventory"
 	"github.com/kushaljain/go-invoicing/invoice"
@@ -19,19 +20,26 @@ var (
 	customers     []customer.Customer
 	mu            = &sync.Mutex{}
 	wg            = sync.WaitGroup{}
+	invCache      cache.Cache
 )
 
 func init() {
+	invCache = cache.NewRedisCache("localhost:6379", 0, 30)
+
 	var err error
 	inventoryData, err = inventory.GetInventory()
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}
 
-	taxesData = taxes.NewTaxes()
-	err = taxesData.GetSGSTList()
-	if utilities.IsError(err) {
-		log.Fatalln(err)
+	taxesData = invCache.Get("taxes")
+	if taxesData == nil {
+		taxesData = taxes.NewTaxes()
+		err = taxesData.GetSGSTList()
+		if utilities.IsError(err) {
+			log.Fatalln(err)
+		}
+		invCache.Set("taxes", taxesData)
 	}
 
 	discounts = map[string]float64{"UPI": 5}
