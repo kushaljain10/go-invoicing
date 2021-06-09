@@ -1,10 +1,12 @@
 Customer Name: Punjabi
 
-1. Apple | Quantity: 3 | Price: 50.00 | SGST: 7.50 | CGST: 7.50 | Total: 165.00
-2. Watermelon | Quantity: 2 | Price: 30.00 | SGST: 3.00 | CGST: 3.00 | Total: 66.00
-3. Moisturiser | Quantity: 1 | Price: 150.00 | SGST: 7.50 | CGST: 15.00 | Total: 172.50
-4. Vacuum Cleaner | Quantity: 1 | Price: 2500.00 | SGST: 125.00 | CGST: 300.00 | Total: 2925.00
 
-Total Cart Value: 3328.50
-Discount (5.0%): 166.43
-Total: 3162
+Following items were not in stock:
+1. Apple
+2. Watermelon
+3. Moisturiser
+4. Vacuum Cleaner
+
+Total Cart Value: 0.00
+Discount (5.0%): 0.00
+Total: 0

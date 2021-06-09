@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/kushaljain/go-invoicing/cache"
 	"github.com/kushaljain/go-invoicing/customer"
 	"github.com/kushaljain/go-invoicing/inventory"
 	"github.com/kushaljain/go-invoicing/taxes"
@@ -33,7 +34,13 @@ type invoiceItem struct {
 
 // var outputDirectory = ""
 
-func GenerateInvoice(inv *inventory.Inventory, tax *taxes.Taxes, customer customer.Customer, discounts map[string]float64, mutex *sync.Mutex, Wg *sync.WaitGroup) error {
+func GenerateInvoice(customer customer.Customer, discounts map[string]float64, mutex *sync.Mutex, Wg *sync.WaitGroup, cache *cache.RedisCache) error {
+	tax, taxErr := taxes.GetTaxes(cache)
+	inv, invErr := inventory.GetInventory(cache)
+	if err := utilities.CheckErrors(taxErr, invErr); err != nil {
+		return err
+	}
+
 	invoice := Invoice{
 		customerName:     customer.Name,
 		unavailableItems: make([]string, 0),
@@ -65,7 +72,7 @@ func GenerateInvoice(inv *inventory.Inventory, tax *taxes.Taxes, customer custom
 			continue
 		}
 		item.quantity = product.Quantity
-		inv.UpdateProductStock(item.productName, (-1)*item.quantity)
+		inv.UpdateProductStock(cache, item.productName, (-1)*item.quantity)
 		item.price = inv.GetPrice(item.productName)
 		item.totalBeforeTax = float64(item.quantity) * item.price
 		item.cgst = inv.GetCgst(item.productName)

@@ -19,19 +19,19 @@ func NewTaxes() *Taxes {
 }
 
 func GetTaxes(cache *cache.RedisCache) (*Taxes, error) {
-	tax := getTax(cache, "SGST")
+	tax := getTaxFromCache(cache, "SGST")
 	if tax != nil {
 		return tax, nil
 	}
 
 	tax = NewTaxes()
-	sgst, err := GetSGSTList(tax)
+	sgst, err := getSGSTList(tax)
 	if err != nil {
 		return nil, err
 	}
 	tax.SetSGSTList(sgst)
 
-	setTax(cache, "SGST", tax)
+	setTaxInCache(cache, "SGST", tax)
 
 	return tax, nil
 }
@@ -40,7 +40,7 @@ func (taxes *Taxes) SetSGSTList(sgst map[string]int) {
 	taxes.SGSTList = sgst
 }
 
-func GetSGSTList(taxes *Taxes) (map[string]int, error) {
+func getSGSTList(taxes *Taxes) (map[string]int, error) {
 
 	reader, err := utilities.GetCSVReader("input/SGST.csv")
 	if utilities.IsError(err) {

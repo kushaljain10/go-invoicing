@@ -6,36 +6,34 @@ import (
 
 	"github.com/kushaljain/go-invoicing/cache"
 	"github.com/kushaljain/go-invoicing/customer"
-	"github.com/kushaljain/go-invoicing/inventory"
 	"github.com/kushaljain/go-invoicing/invoice"
-	"github.com/kushaljain/go-invoicing/taxes"
 	"github.com/kushaljain/go-invoicing/utilities"
 	"github.com/kushaljain/go-invoicing/workerpool"
 )
 
 var (
-	inventoryData *inventory.Inventory
-	taxesData     *taxes.Taxes
-	discounts     map[string]float64
-	customers     []customer.Customer
-	mu            = &sync.Mutex{}
-	wg            = sync.WaitGroup{}
-	invCache      *cache.RedisCache
+	// inventoryData *inventory.Inventory
+	// taxesData     *taxes.Taxes
+	discounts map[string]float64
+	customers []customer.Customer
+	mu        = &sync.Mutex{}
+	wg        = sync.WaitGroup{}
+	invCache  *cache.RedisCache
 )
 
 func init() {
 	invCache = cache.NewRedisCache("localhost:6379", 0, 30)
 
 	var err error
-	inventoryData, err = inventory.GetInventory()
-	if utilities.IsError(err) {
-		log.Fatalln(err)
-	}
+	// inventoryData, err = inventory.GetInventory(invCache)
+	// if utilities.IsError(err) {
+	// 	log.Fatalln(err)
+	// }
 
-	taxesData, err = taxes.GetTaxes(invCache)
-	if utilities.IsError(err) {
-		log.Fatalln(err)
-	}
+	// taxesData, err = taxes.GetTaxes(invCache)
+	// if utilities.IsError(err) {
+	// 	log.Fatalln(err)
+	// }
 
 	discounts = map[string]float64{"UPI": 5}
 
@@ -50,7 +48,7 @@ type generateInvoiceWork struct {
 }
 
 func (w generateInvoiceWork) Process() {
-	err := invoice.GenerateInvoice(inventoryData, taxesData, w.customer, discounts, mu, &wg)
+	err := invoice.GenerateInvoice(w.customer, discounts, mu, &wg, invCache)
 	if utilities.IsError(err) {
 		log.Fatalln(err)
 	}

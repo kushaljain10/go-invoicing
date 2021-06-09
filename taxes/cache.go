@@ -9,15 +9,11 @@ import (
 	"github.com/kushaljain/go-invoicing/cache"
 )
 
-func setTax(cache *cache.RedisCache, key string, value *Taxes) {
+func setTaxInCache(cache *cache.RedisCache, key string, taxes *Taxes) {
 	ctx := context.TODO()
 	client := cache.GetClient()
 
-	tax, err := GetSGSTList(value)
-	if err != nil {
-		panic(err)
-	}
-	json, err := json.Marshal(tax)
+	json, err := json.Marshal(taxes.SGSTList)
 	if err != nil {
 		panic(err)
 	}
@@ -25,18 +21,18 @@ func setTax(cache *cache.RedisCache, key string, value *Taxes) {
 	client.Set(ctx, key, json, cache.Expires*time.Second)
 }
 
-func getTax(cache *cache.RedisCache, key string) *Taxes {
+func getTaxFromCache(cache *cache.RedisCache, key string) *Taxes {
 	ctx := context.TODO()
 	client := cache.GetClient()
 
 	val, err := client.Get(ctx, key).Result()
+	if err == redis.Nil {
+		return nil
+	}
 	if err != nil {
 		return nil
 	}
 
-	if val == string(redis.Nil) {
-		return nil
-	}
 	var tax = NewTaxes()
 	err = json.Unmarshal([]byte(val), &tax.SGSTList)
 	if err != nil {
