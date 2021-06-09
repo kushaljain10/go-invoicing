@@ -12,28 +12,18 @@ import (
 )
 
 var (
-	// inventoryData *inventory.Inventory
-	// taxesData     *taxes.Taxes
-	discounts map[string]float64
-	customers []customer.Customer
-	mu        = &sync.Mutex{}
-	wg        = sync.WaitGroup{}
-	invCache  *cache.RedisCache
+	discounts                 map[string]float64
+	customers                 []customer.Customer
+	mu                        = &sync.Mutex{}
+	wg                        = sync.WaitGroup{}
+	invCache                  *cache.RedisCache
+	CACHE_DURATION_IN_SECONDS = 30
 )
 
 func init() {
 	invCache = cache.NewRedisCache("localhost:6379", 0, 30)
 
 	var err error
-	// inventoryData, err = inventory.GetInventory(invCache)
-	// if utilities.IsError(err) {
-	// 	log.Fatalln(err)
-	// }
-
-	// taxesData, err = taxes.GetTaxes(invCache)
-	// if utilities.IsError(err) {
-	// 	log.Fatalln(err)
-	// }
 
 	discounts = map[string]float64{"UPI": 5}
 
