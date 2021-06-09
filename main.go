@@ -20,7 +20,7 @@ var (
 	customers     []customer.Customer
 	mu            = &sync.Mutex{}
 	wg            = sync.WaitGroup{}
-	invCache      cache.Cache
+	invCache      *cache.RedisCache
 )
 
 func init() {
@@ -32,14 +32,9 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	taxesData = invCache.Get("taxes")
-	if taxesData == nil {
-		taxesData = taxes.NewTaxes()
-		err = taxesData.GetSGSTList()
-		if utilities.IsError(err) {
-			log.Fatalln(err)
-		}
-		invCache.Set("taxes", taxesData)
+	taxesData, err = taxes.GetTaxes(invCache)
+	if utilities.IsError(err) {
+		log.Fatalln(err)
 	}
 
 	discounts = map[string]float64{"UPI": 5}

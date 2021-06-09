@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/kushaljain/go-invoicing/cache"
 	"github.com/kushaljain/go-invoicing/utilities"
 )
 
@@ -17,15 +18,37 @@ func NewTaxes() *Taxes {
 	}
 }
 
-func (taxes *Taxes) GetSGSTList() error {
+func GetTaxes(cache *cache.RedisCache) (*Taxes, error) {
+	tax := getTax(cache, "SGST")
+	if tax != nil {
+		return tax, nil
+	}
+
+	tax = NewTaxes()
+	sgst, err := GetSGSTList(tax)
+	if err != nil {
+		return nil, err
+	}
+	tax.SetSGSTList(sgst)
+
+	setTax(cache, "SGST", tax)
+
+	return tax, nil
+}
+
+func (taxes *Taxes) SetSGSTList(sgst map[string]int) {
+	taxes.SGSTList = sgst
+}
+
+func GetSGSTList(taxes *Taxes) (map[string]int, error) {
 
 	reader, err := utilities.GetCSVReader("input/SGST.csv")
 	if utilities.IsError(err) {
-		return errors.New("error in reading from SGST File")
+		return nil, errors.New("error in reading from SGST File")
 	}
 	headerIndices, err := utilities.GetCSVHeaderIndices(reader)
 	if utilities.IsError(err) {
-		return errors.New("error while fetching SGST details - " + err.Error())
+		return nil, errors.New("error while fetching SGST details - " + err.Error())
 	}
 
 	for {
@@ -34,19 +57,19 @@ func (taxes *Taxes) GetSGSTList() error {
 			break
 		}
 		if utilities.IsError(err) {
-			return errors.New("error while reading from SGST file")
+			return nil, errors.New("error while reading from SGST file")
 		}
 
 		sgstState := sgst[headerIndices["StateCode"]]
 		if !utilities.MatchRegex(sgstState, "^[A-Z]*$") {
-			return errors.New("Invalid state code in database -" + sgstState)
+			return nil, errors.New("Invalid state code in database -" + sgstState)
 		}
 
 		sgstValue, err := strconv.Atoi(sgst[headerIndices["SGST"]])
 		if utilities.IsError(err) || !utilities.IsPositiveInt(sgstValue) {
-			return errors.New("Invalid SGST value for the state in database - " + sgst[0])
+			return nil, errors.New("Invalid SGST value for the state in database - " + sgst[0])
 		}
 		taxes.SGSTList[sgstState] = sgstValue
 	}
-	return nil
+	return taxes.SGSTList, nil
 }
